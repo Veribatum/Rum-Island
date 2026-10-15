@@ -135,6 +135,8 @@ for(const character of ['nova','sylvanas']){
 }
 {
  const {api,vm:s}=setup();api.setCharacter('sylvanas');api.start(0);let a=api.getState();a.player.x=750;a.player.y=164;api.ability();vm.runInContext('stepSummons(.01)',s);const summon=api.getState().summons[0],support=summon.support;assert(support);const x=summon.x,y=summon.y;a.actors.forEach(e=>e.dead=true);a.player.y=-216;a.player.climb=true;for(let i=0;i<120;i++)vm.runInContext('stepSummons(1/120)',s);assert.equal(summon.y,y);assert.equal(summon.x,x);assert.equal(summon.support,support);
- s.labels=[];vm.runInContext("label=(...a)=>labels.push(a);chapter=2;drawMissionDetails()",s);assert(s.labels.some(a=>a[0]==='EXIT → HARBOR'));
+ s.labels=[];vm.runInContext("ctx.fillText=(...a)=>labels.push(a);chapter=2;drawMissionDetails()",s);assert(s.labels.some(a=>a[0]==='HARBOR EXIT →'));
  console.log('Unarmed climb cycles, supported enemy patrols, stationary summon across player ladders and visible bar exit pass');
 }
+
+{const {api,vm:s}=setup();api.start(3);s.props=[];vm.runInContext('terrainFrame=(...args)=>props.push(args);camera=100;drawShipTheft()',s);const first=s.props.map(a=>a[1]);s.props=[];vm.runInContext('camera=500;drawShipTheft()',s);assert.deepEqual(s.props.map(a=>a[1]),first,'ship props use world coordinates, camera applied once');assert.equal(s.props[0][2]+s.props[0][4],300,'cleat rests on ship deck');console.log('Ship mooring and helm world coordinates track the foreground once; cleats meet the deck');}
