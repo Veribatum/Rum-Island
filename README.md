@@ -2,6 +2,12 @@
 
 Current source imported from the published game on October 14, 2026 (Site source commit `d80139dc7cb739753ff93f9e92fce3d2438fd214`). This is still a browser-based Canvas game; the repository makes code, assets, testing and future engine migration editable and versioned.
 
+## Play
+
+Open https://rum-island-adventure.palerain16.chatgpt.site and refresh to get the latest menu. **New Game** chooses Nova or Sylvanas and starts their solo opening; it keeps one previous campaign backup. **Load Game** restores the autosave or previous campaign at its latest story milestone or tavern. **Test Early Levels** jumps into the intro, reunion, bar fight, ship theft, or island arrival in a separate practice session without changing campaign saves. Pause with Esc or the pause button and choose **Main Menu** to return.
+
+Keyboard: A/D move, W/S climb, S/C toggle crouch, Space jump, J attack, K special ability, E interact, Esc pause. Phones use the on-screen controls in landscape.
+
 ## Run locally
 
 Install Node.js 24, clone this repository, then run:
