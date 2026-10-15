@@ -4,9 +4,15 @@ Current source imported from the published game on October 14, 2026 (Site source
 
 ## Play
 
-Open https://rum-island-adventure.palerain16.chatgpt.site and refresh to get the latest menu. **New Game** chooses Nova or Sylvanas and starts their solo opening; it keeps one previous campaign backup. **Load Game** restores the autosave or previous campaign at its latest story milestone or tavern. **Test Early Levels** jumps into the intro, reunion, bar fight, ship theft, or island arrival in a separate practice session without changing campaign saves. Pause with Esc or the pause button and choose **Main Menu** to return.
+Open https://veribatum.github.io/Rum-Island/. **New Game** chooses Nova or Sylvanas and starts their solo opening; it keeps one previous campaign backup. **Load Game** restores the autosave or previous campaign at its latest story milestone or tavern. **Test Early Levels** jumps into the intro, reunion, bar fight, ship theft, or island arrival in a separate practice session without changing campaign saves. Pause with Esc or the pause button and choose **Main Menu** to return.
 
 Keyboard: A/D move, W/S climb, S/C toggle crouch, Space jump, J attack, K special ability, E interact, Esc pause. Phones use the on-screen controls in landscape.
+
+## GitHub Pages and phone home screen
+
+GitHub Settings → Pages uses **Deploy from a branch → main → / (root)**. Root `index.html` launches the current `dist/` game; `.nojekyll` serves the committed files directly. Every push to main is published by GitHub Pages to the same address. Keep the root launcher and the single runtime in `dist/`; do not copy runtime assets into the root or deploy a separate Site for routine updates.
+
+In Safari, open the Pages address, then Share → Add to Home Screen. The manifest and Apple metadata launch the game as a standalone landscape app with its own icon. There is no offline service worker, so updates use the normal Pages/browser cache and require a connection. Saves are local to the browser and origin: progress from the previous chatgpt.site host remains there and does not automatically move to github.io.
 
 ## Run locally
 
