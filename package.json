@@ -1,0 +1,12 @@
+{
+  "name": "rum-island",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Rum Island side-scrolling adventure",
+  "scripts": {
+    "dev": "node scripts/dev-server.cjs",
+    "test": "node tests/story.cjs",
+    "test:render": "node tests/render.cjs"
+  },
+  "devDependencies": { "@napi-rs/canvas": "0.1.100" }
+}
