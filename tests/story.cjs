@@ -1,5 +1,5 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
-function setup(){const els=new Map(),storage=new Map();const context=new Proxy({}, {get:(t,k)=>t[k]||(()=>{})});function el(id){if(!els.has(id))els.set(id,{hidden:false,innerHTML:'',style:{setProperty(){}},classList:{add(){},remove(){}},getContext:()=>context,click(){this.onclick?.();}});return els.get(id);}function selectors(selector){const attr=selector.slice(1,-1);return [...el('#panel').innerHTML.matchAll(new RegExp(attr+'="([^"\\n]+)"','g'))].map(m=>{const e=el(selector+m[1]);e.dataset={[attr.slice(5)]:m[1]};return e;});}const s={console,Math,JSON,document:{querySelector:el,querySelectorAll:selectors},window:{},addEventListener(){},requestAnimationFrame(){},localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},Image:class{set src(x){}},innerWidth:960,innerHeight:540};vm.createContext(s);vm.runInContext(fs.readFileSync(__dirname+'/../dist/frame-bounds.js','utf8'),s);vm.runInContext(fs.readFileSync(__dirname+'/../dist/adventure.js','utf8'),s);vm.runInContext(fs.readFileSync(__dirname+'/../dist/mission.js','utf8'),s);vm.runInContext(fs.readFileSync(__dirname+'/../dist/polish.js','utf8'),s);vm.runInContext(fs.readFileSync(__dirname+'/../dist/home.js','utf8'),s);vm.runInContext(fs.readFileSync(__dirname+'/../dist/voyages.js','utf8'),s);vm.runInContext(fs.readFileSync(__dirname+'/../dist/refinement.js','utf8'),s);return{api:s.window.RumIsland,vm:s,el,storage};}
+function setup(){const els=new Map(),storage=new Map();const context=new Proxy({}, {get:(t,k)=>t[k]||(()=>{})});function el(id){if(!els.has(id))els.set(id,{hidden:false,innerHTML:'',style:{setProperty(){}},classList:{add(){},remove(){}},getContext:()=>context,click(){this.onclick?.();}});return els.get(id);}function selectors(selector){const attr=selector.slice(1,-1);return [...el('#panel').innerHTML.matchAll(new RegExp(attr+'="([^"\\n]+)"','g'))].map(m=>{const e=el(selector+m[1]);e.dataset={[attr.slice(5).replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]:m[1]};return e;});}const s={console,Math,JSON,document:{querySelector:el,querySelectorAll:selectors},window:{},addEventListener(){},requestAnimationFrame(){},localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},Image:class{set src(x){}},innerWidth:960,innerHeight:540};vm.createContext(s);vm.runInContext(fs.readFileSync(__dirname+'/../dist/frame-bounds.js','utf8'),s);vm.runInContext(fs.readFileSync(__dirname+'/../dist/adventure.js','utf8'),s);vm.runInContext(fs.readFileSync(__dirname+'/../dist/mission.js','utf8'),s);vm.runInContext(fs.readFileSync(__dirname+'/../dist/polish.js','utf8'),s);vm.runInContext(fs.readFileSync(__dirname+'/../dist/home.js','utf8'),s);vm.runInContext(fs.readFileSync(__dirname+'/../dist/voyages.js','utf8'),s);vm.runInContext(fs.readFileSync(__dirname+'/../dist/refinement.js','utf8'),s);vm.runInContext(fs.readFileSync(__dirname+'/../dist/menu.js','utf8'),s);return{api:s.window.RumIsland,vm:s,el,storage};}
 for(const character of ['nova','sylvanas']){
  const {api,vm:s,el,storage}=setup();api.setCharacter(character);api.start(0);let a=api.getState();assert(!a.partner);a.actors.forEach(e=>e.dead=true);
  const portal=a.objects.find(o=>o.type==='portal');a.player.x=portal.x;a.player.y=366;api.interact();assert.equal(api.getState().mode,'play','portal locked until objectives');
@@ -109,4 +109,32 @@ for(const name of ['nova','sylvanas']){
 }
 {
  const {api,vm:s}=setup();s.calls=[];vm.runInContext("assets.summonMotion={width:1536,height:1024};ctx.drawImage=(...a)=>calls.push(a)",s);api.setCharacter('sylvanas');api.start(0);api.ability();const sum=api.getState().summons[0];sum.vx=100;for(const t of [.01,.16,.3,.44])vm.runInContext(`clock=${t};drawSummons()`,s);assert.equal(new Set(s.calls.map(c=>c[1])).size,4);s.calls=[];for(const t of [.39,.29,.19,.09]){sum.attack=t;vm.runInContext('drawSummons()',s);}assert.equal(new Set(s.calls.map(c=>c[1])).size,4);console.log('Summon uses four walking frames and four sword-attack frames');
+}
+
+// Menu workflows preserve legacy campaigns and isolate early-level practice.
+{
+ const {api,vm:s,el,storage}=setup();
+ const key='rum-island-story-v2',legacy={character:'sylvanas',story:5,coins:73,crew:['Gary the Goblin'],repairs:[0],quests:[],scraps:[]};
+ storage.set(key,JSON.stringify(legacy));vm.runInContext('title()',s);assert(el('#panel').innerHTML.includes('New Game'));
+ el('#load-game').click();el('#load-current').click();assert.equal(api.getState().mode,'visit');assert.equal(api.getState().save.coins,73);
+ vm.runInContext('pause()',s);el('#main-menu').click();assert(el('#panel').innerHTML.includes('Test Early Levels'));
+ const before=storage.get(key);el('#test-levels').click();
+ el('[data-character]nova').click();el('[data-test-level]0').click();assert.equal(api.getState().chapter,0);assert.equal(api.getState().save.character,'nova');
+ vm.runInContext('save.coins=999;persist();title()',s);assert.equal(storage.get(key),before);
+ for(const chapter of [1,2,3,4]){el('#test-levels').click();el('[data-test-level]'+chapter).click();assert.equal(api.getState().chapter,chapter);vm.runInContext('persist();title()',s);assert.equal(storage.get(key),before);}
+ el('#load-game').click();el('#load-current').click();assert.equal(api.getState().save.coins,73);
+ vm.runInContext('title()',s);el('#new-game').click();el('[data-character]nova').click();el('#begin-new').click();assert.equal(api.getState().chapter,0);assert.equal(api.getState().save.coins,0);assert.equal(JSON.parse(storage.get(key+'-previous')).coins,73);
+ vm.runInContext('title()',s);el('#load-game').click();el('#load-previous').click();assert.equal(api.getState().mode,'visit');assert.equal(api.getState().save.character,'sylvanas');assert.equal(api.getState().save.coins,73);assert.equal(JSON.parse(storage.get(key+'-previous')).character,'nova');
+ console.log('Menus: legacy load, pause-to-menu, all five isolated practice chapters, new-game backup and previous-game restore pass');
+}
+for(const character of ['nova','sylvanas']){
+ const {api,vm:s}=setup();api.setCharacter(character);api.start(0);let a=api.getState();for(const e of a.actors){assert(e.support,'opening enemy has a platform');assert.equal(e.y+e.h,e.support.y);}
+ for(let i=0;i<500;i++)api.update(1/120);for(const e of api.getState().actors){assert(e.x>=e.support.x+3&&e.x+e.w<=e.support.x+e.support.w-3);assert.equal(e.y+e.h,e.support.y);}
+ api.start(2);s.calls=[];vm.runInContext("assets.characters={width:400,height:300};assets.novaMotion={width:400,height:300};assets.sylMotion={width:400,height:300};assets.novaUnarmed={width:400,height:200};assets.sylUnarmed={width:400,height:200};ctx.drawImage=(...a)=>calls.push(a);player.climb=true;keys.up=true",s);
+ for(const t of [.01,.18,.35,.52])vm.runInContext(`clock=${t};sprite(player,selected)`,s);assert.equal(new Set(s.calls.map(c=>c[1])).size,4);assert(s.calls.every(c=>c[2]===200),'unarmed ladder uses climbing row');
+}
+{
+ const {api,vm:s}=setup();api.setCharacter('sylvanas');api.start(0);let a=api.getState();a.player.x=750;a.player.y=164;api.ability();vm.runInContext('stepSummons(.01)',s);const summon=api.getState().summons[0],support=summon.support;assert(support);const x=summon.x,y=summon.y;a.actors.forEach(e=>e.dead=true);a.player.y=-216;a.player.climb=true;for(let i=0;i<120;i++)vm.runInContext('stepSummons(1/120)',s);assert.equal(summon.y,y);assert.equal(summon.x,x);assert.equal(summon.support,support);
+ s.labels=[];vm.runInContext("label=(...a)=>labels.push(a);chapter=2;drawMissionDetails()",s);assert(s.labels.some(a=>a[0]==='EXIT → HARBOR'));
+ console.log('Unarmed climb cycles, supported enemy patrols, stationary summon across player ladders and visible bar exit pass');
 }
